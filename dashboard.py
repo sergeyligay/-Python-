@@ -106,7 +106,7 @@ def place_order(engine, email, product_name, quantity):
                 "user_id": user,
                 "product_id": product.id,
                 "quantity": quantity
-            }2
+            }
         )
         conn.execute(
             text("""
