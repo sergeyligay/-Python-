@@ -1,6 +1,7 @@
 import os 
 from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
+from sqlalchemy.exc import SQLAlchemyError
 
 load_dotenv()
 
@@ -9,9 +10,16 @@ def get_engine():
 
     url = os.getenv("DATABASE_URL")
     if not url:
-        raise ValueError("DATABASE_URL is missing")
-    engine = create_engine(url)
-    return engine
+        raise ValueError("DATABASE_URL is missing. Check your .env file.")
+    try:
+        engine = create_engine(url)
+        with engine.connect():
+            pass
+        return engine
+    except SQLAlchemyError as e:
+        raise ConnectionError(
+            f"Could not connect to the database: {e}"
+        ) from e
     
 def store_report(engine):
     """Print counts, the catalog, and the top 3 customers."""
@@ -123,7 +131,11 @@ def place_order(engine, email, product_name, quantity):
 
 
 def main():
-    engine = get_engine()
+    try:
+        engine = get_engine()
+    except (ValueError, ConnectionError) as e:
+        print(f"Database connection error: {e}")
+        return
     store_report(engine)
     while True:
         print("\n1. Add product")
